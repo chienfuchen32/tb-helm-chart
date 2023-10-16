@@ -1,0 +1,53 @@
+---
+apiVersion: apps/v1
+kind: {{.Values.jsexecutor.kind}}
+metadata:
+  name: tb-js-executor
+  namespace: {{.Values.namespace}}
+spec:
+  replicas: {{.Values.jsexecutor.replicas}}
+  selector:
+    matchLabels:
+      app: tb-js-executor
+  template:
+    metadata:
+      labels:
+        app: tb-js-executor
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: "app"
+                      operator: In
+                      values:
+                        - tb-js-executor
+                topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: server
+          imagePullPolicy: IfNotPresent
+          image: {{.Values.jsexecutor.image}}
+          resources:
+            {{- toYaml .Values.jsexecutor.resources | nindent 12}}
+          env:
+            - name: REMOTE_JS_EVAL_REQUEST_TOPIC
+              value: "js_eval.requests"
+            - name: LOGGER_LEVEL
+              value: "info"
+            - name: LOG_FOLDER
+              value: "logs"
+            - name: LOGGER_FILENAME
+              value: "tb-js-executor-%DATE%.log"
+            - name: DOCKER_MODE
+              value: "true"
+            - name: SCRIPT_BODY_TRACE_FREQUENCY
+              value: "1000"
+          envFrom:
+            - configMapRef:
+                name: tb-public-config
+      nodeSelector:
+        {{.Values.jsexecutor.nodeSelector}}
+      restartPolicy: Always

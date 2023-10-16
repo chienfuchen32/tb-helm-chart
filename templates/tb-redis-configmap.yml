@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tb-redis-config
+  namespace: {{.Values.namespace}}
+  labels:
+    name: tb-redis-config
+data:
+  CACHE_TYPE: redis
+  REDIS_HOST: {{.Values.redis.REDIS_HOST}}
+  REDIS_PORT: "{{.Values.redis.REDIS_PORT}}"
+  REDIS_PASSWORD: {{.Values.redis.REDIS_PASSWORD}}
+  REDIS_DB: "{{.Values.redis.REDIS_DB}}"

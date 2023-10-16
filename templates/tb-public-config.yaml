@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tb-public-config
+  namespace: {{.Values.namespace}}
+  labels:
+    name: tb-public-config
+data:
+  TB_QUEUE_TYPE: kafka
+  TB_KAFKA_SERVERS: {{.Values.public.kafka.TB_KAFKA_SERVERS}}
+  ZOOKEEPER_ENABLED: {{.Values.public.zookeeper.ZOOKEEPER_ENABLED | quote}}
+  ZOOKEEPER_URL: {{.Values.public.zookeeper.ZOOKEEPER_URL}}
+  ZOOKEEPER_RETRY_INTERVAL_MS: {{.Values.public.zookeeper.ZOOKEEPER_RETRY_INTERVAL_MS | quote}}
+  ZOOKEEPER_CONNECTION_TIMEOUT_MS: {{.Values.public.zookeeper.ZOOKEEPER_CONNECTION_TIMEOUT_MS | quote}}
+  ZOOKEEPER_SESSION_TIMEOUT_MS: {{.Values.public.zookeeper.ZOOKEEPER_SESSION_TIMEOUT_MS | quote}}
+{{- if .Values.public.extra}}
+  {{- toYaml .Values.public.extra | nindent 2}}
+{{- end }}

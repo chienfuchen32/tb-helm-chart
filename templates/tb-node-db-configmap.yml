@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tb-node-db-config
+  namespace: {{.Values.namespace}}
+  labels:
+    name: tb-node-db-config
+data:
+  {{- toYaml .Values.db.config | nindent 2 }}

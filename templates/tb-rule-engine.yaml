@@ -1,0 +1,115 @@
+---
+apiVersion: apps/v1
+kind: {{.Values.ruleengine.kind}}
+metadata:
+  name: tb-rule-engine
+  namespace: {{.Values.namespace}}
+spec:
+  podManagementPolicy: Parallel
+  serviceName: tb-rule-engine
+  replicas: {{.Values.ruleengine.replicas}}
+  selector:
+    matchLabels:
+      app: tb-rule-engine
+  template:
+    metadata:
+      labels:
+        app: tb-rule-engine
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: "app"
+                      operator: In
+                      values:
+                        - tb-rule-engine
+                topologyKey: "kubernetes.io/hostname"
+      securityContext:
+        runAsUser: 799
+        runAsNonRoot: true
+        fsGroup: 799
+      volumes:
+        - name: tb-node-config
+          configMap:
+            name: tb-node-config
+            items:
+              - key: conf
+                path: thingsboard.conf
+              - key: logback
+                path: logback.xml
+        - name: tb-node-logs
+          emptyDir: {}
+      containers:
+        - name: tb-rule-engine
+          imagePullPolicy: IfNotPresent
+          image: {{.Values.ruleengine.image}}
+          ports:
+            - containerPort: 8080
+              name: http
+            - containerPort: 9090
+              name: rpc
+          resources:
+            {{- toYaml .Values.ruleengine.resources | nindent 12 }}
+          env:
+            - name: TB_SERVICE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: TB_SERVICE_TYPE
+              value: "tb-rule-engine"
+            - name: HTTP_ENABLED
+              value: "false"
+            - name: MQTT_ENABLED
+              value: "false"
+            - name: COAP_ENABLED
+              value: "false"
+            - name: SNMP_ENABLED
+              value: "false"
+            - name: LWM2M_ENABLED
+              value: "false"
+          envFrom:
+            - configMapRef:
+                name: tb-node-db-config
+            - configMapRef:
+                name: tb-public-config
+            - configMapRef:
+                name: tb-redis-config
+          volumeMounts:
+            - mountPath: /config
+              name: tb-node-config
+            - mountPath: /var/log/thingsboard
+              name: tb-node-logs
+          readinessProbe:
+            httpGet:
+              path: /login
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /login
+              port: http
+            initialDelaySeconds: 460
+            timeoutSeconds: 10
+      nodeSelector:
+        {{.Values.ruleengine.nodeSelector}}
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tb-rule-engine
+  namespace: {{.Values.namespace}}
+  labels:
+    app: tb-rule-engine
+spec:
+  type: ClusterIP
+  selector:
+    app: tb-rule-engine
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 8080

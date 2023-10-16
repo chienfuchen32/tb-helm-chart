@@ -1,0 +1,176 @@
+namespace: thingsboard
+public:
+  kafka:
+    TB_KAFKA_SERVERS: tb-kafka:9092
+  zookeeper:
+    ZOOKEEPER_ENABLED: "true"
+    ZOOKEEPER_URL: "zookeeper:2181"
+    ZOOKEEPER_RETRY_INTERVAL_MS: "3000"
+    ZOOKEEPER_CONNECTION_TIMEOUT_MS: "10000"
+    ZOOKEEPER_SESSION_TIMEOUT_MS: "10000"
+  extra:
+    TB_KAFKA_ACKS: "1"
+    TB_KAFKA_RETRIES: "3"
+    TB_KAFKA_BATCH_SIZE: "20000"
+    TB_KAFKA_LINGER_MS: "100"
+    TB_KAFKA_MAX_REQUEST_SIZE: "5242880"
+    TB_BUFFER_MEMORY: "134217728"
+    TB_QUEUE_KAFKA_REPLICATION_FACTOR: "2"
+    TB_QUEUE_KAFKA_MAX_POLL_RECORDS: "5120"
+    TB_QUEUE_KAFKA_MAX_PARTITION_FETCH_BYTES: "134217728"
+    TB_QUEUE_KAFKA_CONSUMER_STATS_RESPONSE_TIMEOUT_MS: "5000"
+    TB_QUEUE_CORE_PACK_PROCESSING_TIMEOUT_MS: "10000"
+    TB_QUEUE_RULE_ENGINE_POLL_INTERVAL_MS: "50"
+    TB_KAFKA_MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION: "15"
+    TB_QUEUE_CORE_PARTITIONS: "30"
+    TB_QUEUE_VC_PARTITIONS: "30"
+    TB_QUEUE_RE_HP_PARTITIONS: "30"
+    TB_QUEUE_RE_MAIN_PARTITIONS: "30"
+    TB_QUEUE_RE_SQ_PARTITIONS: "30"
+    REMOTE_JS_MAX_EVAL_REQUEST_TIMEOUT: "180000"
+    REMOTE_JS_MAX_REQUEST_TIMEOUT: "30000"
+
+redis:
+  REDIS_HOST: "<REDIS_HOST>"
+  REDIS_PORT: "6379"
+  REDIS_PASSWORD: "<REDIS_PASSWORD>"
+  REDIS_DB: "0"
+
+db:
+  config:
+    SPRING_DATASOURCE_URL: "jdbc:postgresql://<POSTGRESQL_HOST>:5432/thingsboard"
+    SPRING_DATASOURCE_USERNAME: "<POSTGRESQL_USERNAME>"
+    SPRING_DATASOURCE_PASSWORD: "<POSTGRESQL_PASSWORD>"
+    SPRING_DATASOURCE_MAXIMUM_POOL_SIZE: "3"
+    DATABASE_TS_TYPE: cassandra
+    DATABASE_TS_LATEST_TYPE: cassandra
+    CASSANDRA_CLUSTER_NAME: "<CASSANDRA_CLUSTER_NAME>"
+    CASSANDRA_KEYSPACE_NAME: thingsboard
+    CASSANDRA_LOCAL_DATACENTER: "<CASSANDRA_LOCAL_DATACENTER>"
+    CASSANDRA_URL: "<CASSANDRA_IP1>:9042,<CASSANDRA_IP2>:9042,<CASSANDRA_IP3>:9042"
+    CASSANDRA_USERNAME: "<CASSANDRA_USERNAME>"
+    CASSANDRA_PASSWORD: "<CASSANDRA_PASSWORD>"
+    CASSANDRA_USE_SSL: "true"
+    CASSANDRA_USE_JMX: "true"
+    CASSANDRA_USE_METRICS: "true"
+    CASSANDRA_USE_CREDENTIALS: "true"
+    CASSANDRA_SSL_HOSTNAME_VALIDATION: "false"
+    CASSANDRA_SOCKET_TIMEOUT: "30000"
+    CASSANDRA_SOCKET_READ_TIMEOUT: "60000"
+    CASSANDRA_MAX_REQUESTS_PER_CONNECTION_LOCAL: "98304"
+    CASSANDRA_MAX_REQUESTS_PER_CONNECTION_REMOTE: "98304"
+    CASSANDRA_READ_CONSISTENCY_LEVEL: "ONE"
+    CASSANDRA_WRITE_CONSISTENCY_LEVEL: "ONE"
+    CASSANDRA_DEFAULT_FETCH_SIZE: "2000"
+    TS_KV_PARTITIONS_MAX_CACHE_SIZE: "1000000"
+    TS_KV_TTL: "0"
+    TS_EVENTS_TTL: "0"
+    DEBUG_EVENTS_TTL: "604800"
+    CASSANDRA_QUERY_BUFFER_SIZE: "500000"
+    CASSANDRA_QUERY_CONCURRENT_LIMIT: "5000"
+    CASSANDRA_QUERY_DISPATCHER_THREADS: "2"
+    CASSANDRA_QUERY_CALLBACK_THREADS: "4"
+    PERMIT_MAX_WAIT_TIME: "120000"
+    CASSANDRA_QUERY_POLL_MS: "50"
+    TS_KV_PARTITIONING: DAYS
+    TS_KV_TTL: "15768000"
+    TS_EVENTS_TTL: "15768000"
+    TB_SERVER_WS_SEND_TIMEOUT: "10"
+    MIN_SERVER_SIDE_RPC_TIMEOUT: "30000"
+    DEFAULT_SERVER_SIDE_RPC_TIMEOUT: "30000"
+    DASHBOARD_MAX_DATAPOINTS_LIMIT: "1000000000"
+    DATABASE_TS_MAX_INTERVALS: "86400"
+    SQL_TTL_EVENTS_ENABLED: "true"
+    SQL_TTL_EVENTS_EXECUTION_INTERVAL: "2220000"
+    SQL_TTL_EVENTS_EVENTS_TTL: "1000000"
+    SQL_TTL_EVENTS_DEBUG_EVENTS_TTL: "604800"
+    METRICS_ENABLED: "true"
+    METRICS_ENDPOINTS_EXPOSE: prometheus
+    JS_EVALUATOR: "remote"
+    HTTP_LOG_CONTROLLER_ERROR_STACK_TRACE: "false"
+    TRANSPORT_TYPE: remote
+    TB_SERVER_WS_TENANT_RATE_LIMITS_MAX_UPDATES_PER_SESSION: "1000000:1,60000000:60"
+    JWT_TOKEN_EXPIRATION_TIME: "2592000"
+    JWT_REFRESH_TOKEN_EXPIRATION_TIME: "2592000"
+    PERSIST_STATE_TO_TELEMETRY: "false"
+
+core:
+  kind: StatefulSet
+  replicas: 3
+  image: "tb-node:3.5.1"
+  nodeSelector: "agentpool: tbcorepool"
+  resources:
+    limits:
+      cpu: "3"
+      memory: 12Gi
+    requests:
+      cpu: "500m"
+      memory: 1000Mi
+
+ruleengine:
+  kind: StatefulSet
+  replicas: 25
+  image: "tb-node:3.5.1"
+  nodeSelector: "agentpool: tbrepool"
+  resources:
+    limits:
+      cpu: "6"
+      memory: 12Gi
+    requests:
+      cpu: "1"
+      memory: 2000Mi
+
+jsexecutor:
+  kind: Deployment
+  replicas: 20
+  image: "tb-js-executor:3.5.1"
+  nodeSelector: "agentpool: tbjspool"
+  resources:
+    limits:
+      cpu: "250m"
+      memory: 200Mi
+    requests:
+      cpu: "100m"
+      memory: 100Mi
+
+mqtt:
+  kind: StatefulSet
+  replicas: 12
+  image: "tb-mqtt-transport:3.5.1"
+  nodeSelector: "agentpool: tbtranspool"
+  resources:
+    limits:
+      cpu: "3"
+      memory: 10Gi
+    requests:
+      cpu: "500m"
+      memory: 500Mi
+  loadBalancerIP: "LOAD_BALANCER_IP"
+  config:
+    MQTT_BIND_PORT: 1883
+    MQTT_TIMEOUT: "10000"
+
+webui:
+  replicas: 1
+  image: "tb-web-ui:3.5.1"
+  nodeSelector: "agentpool: tbjspool"
+  resources:
+    limits:
+      cpu: "100m"
+      memory: 100Mi
+    requests:
+      cpu: "100m"
+      memory: 100Mi
+
+ingress:
+  ingressClassName: azure-application-gateway
+  host: "<HOST>"
+  annotations:
+    appgw.ingress.kubernetes.io/connection-draining: "false"
+    appgw.ingress.kubernetes.io/connection-draining-timeout: "10"
+    appgw.ingress.kubernetes.io/request-timeout: "300"
+    appgw.ingress.kubernetes.io/ssl-redirect: "true"
+    appgw.ingress.kubernetes.io/backend-path-prefix: /
+    appgw.ingress.kubernetes.io/appgw-ssl-certificate: "<APPLICATION_GATEWAY_SSL_CERT_NAME>"
+    appgw.ingress.kubernetes.io/waf-policy-for-path: "<WAF_RESOURCE_ID>"
+
